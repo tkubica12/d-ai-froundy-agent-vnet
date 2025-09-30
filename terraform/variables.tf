@@ -1,0 +1,49 @@
+variable "subscription_id" {
+  description = "Subscription that will host the private agent environment."
+  type        = string
+  default     = "673af34d-6b28-41dc-bc7b-f507418045e6"
+}
+
+variable "location" {
+  description = "Azure region for all resources."
+  type        = string
+  default     = "swedencentral"
+}
+
+variable "prefix" {
+  description = "Short name used as a prefix for all resource names."
+  type        = string
+  default     = "daf"
+}
+
+variable "tags" {
+  description = "Common tags applied to every resource."
+  type        = map(string)
+  default = {
+    environment = "dev"
+  }
+}
+
+variable "backend_image" {
+  description = "Optional override for the backend container image reference."
+  type        = string
+  default     = null
+}
+
+variable "frontend_image" {
+  description = "Optional override for the frontend container image reference."
+  type        = string
+  default     = null
+}
+
+variable "jump_host_admin_username" {
+  description = "Admin username for the jump host virtual machine."
+  type        = string
+  default     = "azureuser"
+}
+
+variable "jump_host_admin_password" {
+  description = "Password supplied to the Windows jump host VM."
+  type        = string
+  sensitive   = true
+}
