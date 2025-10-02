@@ -45,14 +45,15 @@ module "application" {
 module "foundry" {
   source = "./modules/foundry"
 
-  resource_group_name        = azurerm_resource_group.main.name
-  resource_group_id          = azurerm_resource_group.main.id
-  location                   = var.location
-  base_name                  = local.base_name
-  tags                       = var.tags
-  agent_subnet_id            = module.networking.subnet_ids["snet-foundry"]
-  private_endpoint_subnet_id = module.networking.subnet_ids["snet-pes"]
-  private_dns_zone_ids       = module.networking.private_dns_zone_ids
+  resource_group_name             = azurerm_resource_group.main.name
+  resource_group_id               = azurerm_resource_group.main.id
+  location                        = var.location
+  base_name                       = local.base_name
+  tags                            = var.tags
+  agent_subnet_id                 = module.networking.subnet_ids["snet-foundry"]
+  private_endpoint_subnet_id      = module.networking.subnet_ids["snet-pes"]
+  private_dns_zone_ids            = module.networking.private_dns_zone_ids
+  jump_host_identity_principal_id = module.jump.jump_host_identity_principal_id
 }
 
 module "jump" {

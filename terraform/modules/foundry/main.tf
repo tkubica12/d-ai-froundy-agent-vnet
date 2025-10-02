@@ -519,3 +519,15 @@ resource "azurerm_role_assignment" "storage_blob_owner_restricted" {
 
   name = uuidv5("dns", "${local.project_name}-${azurerm_storage_account.agent.name}-blob-owner")
 }
+
+# Grant jump host Azure AI User role to create and manage agents
+resource "azurerm_role_assignment" "jump_host_ai_user" {
+  count                = var.jump_host_identity_principal_id != null ? 1 : 0
+  scope                = azapi_resource.ai_foundry.id
+  role_definition_name = "Azure AI User"
+  principal_id         = var.jump_host_identity_principal_id
+
+  depends_on = [azapi_resource.ai_foundry_project]
+
+  name = uuidv5("dns", "${local.project_name}-jump-host-ai-user")
+}

@@ -1,0 +1,11 @@
+[project]
+name = "facilitator"
+version = "0.1.0"
+description = "Facilitator agent for Azure AI Foundry Agent Service"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "azure-ai-projects>=1.0.0b6",
+    "azure-identity>=1.19.0",
+    "python-dotenv>=1.0.1",
+]
