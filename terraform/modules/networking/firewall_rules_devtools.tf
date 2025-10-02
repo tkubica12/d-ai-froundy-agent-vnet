@@ -67,12 +67,12 @@ resource "azurerm_firewall_policy_rule_collection_group" "developer_tools" {
       destination_fqdns = [
         "github.com",
         "*.github.com",
-        "api.github.com",
-        "raw.githubusercontent.com",
-        "objects.githubusercontent.com",
-        "github-releases.githubusercontent.com",
-        "codeload.github.com",
-        "cli.github.com"
+        "*.visualstudio.com",
+        "*.githubusercontent.com",
+        "*.githubcopilot.com",
+        "default.exp-tas.com",
+        "*.business.githubcopilot.com",
+        "*.enterprise.githubcopilot.com"
       ]
     }
 
