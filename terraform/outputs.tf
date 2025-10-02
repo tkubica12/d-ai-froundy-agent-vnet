@@ -33,6 +33,11 @@ output "cognitive_account_endpoint" {
   description = "Azure AI Foundry account endpoint URI."
 }
 
+output "embeddings_endpoint" {
+  value       = module.foundry.embeddings_endpoint
+  description = "Embeddings model endpoint URI (for Azure OpenAI SDK)."
+}
+
 output "bastion_host_id" {
   value       = module.jump.bastion_host_id
   description = "Azure Bastion host resource ID."

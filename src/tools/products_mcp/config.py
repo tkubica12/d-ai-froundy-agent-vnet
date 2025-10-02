@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     cosmos_db_name: str = "appdb"
     cosmos_db_key: str | None = None  # Optional: uses Managed Identity if not provided
 
+    # Azure OpenAI / AI Foundry Configuration for Embeddings
+    embeddings_endpoint: str | None = None  # Optional: endpoint for Azure OpenAI embeddings
+    embeddings_deployment: str = "text-embedding-3-large"
+    embeddings_dimensions: int = 2048  # Reduced from 3072 max to fit Cosmos DB limits
+    embeddings_api_version: str = "2024-08-01-preview"
+
     # Vector Search Settings
     vector_top_k: int = 20
     min_similarity_threshold: float = 0.5
@@ -36,10 +42,15 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
 
-    @property
+        @property
     def use_managed_identity(self) -> bool:
         """Determine if we should use Managed Identity authentication."""
-        return self.cosmos_db_key is None
+        return not self.cosmos_db_key or self.cosmos_db_key.strip() == ""
+
+    @property
+    def use_embeddings(self) -> bool:
+        """Determine if embeddings endpoint is configured."""
+        return self.embeddings_endpoint is not None and self.embeddings_endpoint.strip() != ""
 
 
 settings = Settings()

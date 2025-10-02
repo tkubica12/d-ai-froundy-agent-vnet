@@ -78,7 +78,7 @@ resource "azapi_update_resource" "products_vector_index" {
             path           = "/embedding"
             type           = "quantizedFloatVectorIndex"
             dataType       = "float32"
-            dimensions     = 1536
+            dimensions     = 2048
             distanceMetric = "cosine"
             algorithmConfig = {
               kind = "hnsw"

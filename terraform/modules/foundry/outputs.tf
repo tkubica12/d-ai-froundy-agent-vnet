@@ -8,6 +8,11 @@ output "cognitive_account_endpoint" {
   value       = tostring(azapi_resource.ai_foundry.output["properties"]["endpoint"])
 }
 
+output "embeddings_endpoint" {
+  description = "Endpoint URI for embeddings model deployment (for use with Azure OpenAI SDK)."
+  value       = "${tostring(azapi_resource.ai_foundry.output["properties"]["endpoint"])}models"
+}
+
 output "model_deployment_ids" {
   description = "Map of Azure AI Foundry deployment resource IDs keyed by deployment name."
   value = {

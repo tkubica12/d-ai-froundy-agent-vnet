@@ -23,6 +23,10 @@ locals {
       model_name    = "gpt-4.1"
       model_version = "2025-04-14"
     }
+    "text-embedding-3-large" = {
+      model_name    = "text-embedding-3-large"
+      model_version = "1"
+    }
   }
 }
 
@@ -519,6 +523,17 @@ resource "azurerm_role_assignment" "jump_host_ai_user" {
   count                = local.enable_jump_host_access ? 1 : 0
   scope                = azapi_resource.ai_foundry.id
   role_definition_name = "Azure AI User"
+  principal_id         = var.jump_host_identity_principal_id
+
+  depends_on = [azapi_resource.ai_foundry_project]
+}
+
+# Grant jump host Cognitive Services OpenAI User role for embeddings access
+# Only created when jump_host_identity_principal_id is explicitly provided
+resource "azurerm_role_assignment" "jump_host_openai_user" {
+  count                = local.enable_jump_host_access ? 1 : 0
+  scope                = azapi_resource.ai_foundry.id
+  role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = var.jump_host_identity_principal_id
 
   depends_on = [azapi_resource.ai_foundry_project]
