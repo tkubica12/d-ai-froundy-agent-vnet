@@ -5,10 +5,30 @@ This script creates a basic agent, sends a test message, and verifies the respon
 """
 import os
 import logging
+from pathlib import Path
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 from azure.ai.agents.models import MessageRole
 from dotenv import load_dotenv
+from jinja2 import Environment, FileSystemLoader
+
+# ANSI color codes
+class Colors:
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    DIM = '\033[2m'
+    
+    # Colors
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    MAGENTA = '\033[95m'
+    
+    # Background colors
+    BG_GREEN = '\033[42m'
+    BG_RED = '\033[41m'
 
 # Configure logging
 logging.basicConfig(
@@ -16,6 +36,59 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Reduce verbosity of Azure SDK loggers
+logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.WARNING)
+logging.getLogger('azure.identity').setLevel(logging.WARNING)
+logging.getLogger('azure').setLevel(logging.WARNING)
+
+
+def print_header(text: str):
+    """Print a styled header."""
+    print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*70}{Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.CYAN}{text}{Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.CYAN}{'='*70}{Colors.RESET}\n")
+
+
+def print_step(emoji: str, text: str):
+    """Print a step with emoji and color."""
+    print(f"{Colors.BLUE}{emoji}  {text}{Colors.RESET}")
+
+
+def print_success(emoji: str, text: str):
+    """Print a success message."""
+    print(f"{Colors.GREEN}{emoji}  {text}{Colors.RESET}")
+
+
+def print_error(emoji: str, text: str):
+    """Print an error message."""
+    print(f"{Colors.RED}{emoji}  {text}{Colors.RESET}")
+
+
+def print_info(text: str, dim: bool = False):
+    """Print informational text."""
+    color = Colors.DIM if dim else Colors.RESET
+    print(f"{color}{text}{Colors.RESET}")
+
+
+def print_conversation_msg(role: str, content: str):
+    """Print a conversation message with role styling."""
+    if role == "USER":
+        print(f"{Colors.BOLD}{Colors.MAGENTA}👤 {role}:{Colors.RESET} {content}")
+    else:
+        print(f"{Colors.BOLD}{Colors.CYAN}🤖 {role}:{Colors.RESET} {content}")
+
+
+def load_system_prompt() -> str:
+    """Load and render the system prompt from Jinja2 template.
+    
+    Returns:
+        str: The rendered system prompt.
+    """
+    template_dir = Path(__file__).parent
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template('system_prompt.jinja2')
+    return template.render()
 
 
 def main():
@@ -28,95 +101,97 @@ def main():
     model_deployment_name = os.getenv("MODEL_DEPLOYMENT_NAME")
     
     if not project_endpoint:
-        logger.error("PROJECT_ENDPOINT environment variable is not set")
-        logger.info("Please copy .env.sample to .env and configure your Azure AI Foundry project endpoint")
+        print_error("❌", "PROJECT_ENDPOINT environment variable is not set")
+        print_info("Please copy .env.sample to .env and configure your Azure AI Foundry project endpoint", dim=True)
         return
     
     if not model_deployment_name:
-        logger.error("MODEL_DEPLOYMENT_NAME environment variable is not set")
-        logger.info("Please set MODEL_DEPLOYMENT_NAME in your .env file (e.g., gpt-4o)")
+        print_error("❌", "MODEL_DEPLOYMENT_NAME environment variable is not set")
+        print_info("Please set MODEL_DEPLOYMENT_NAME in your .env file (e.g., gpt-4o)", dim=True)
         return
     
-    logger.info("Starting facilitator agent smoke test...")
-    logger.info(f"Project endpoint: {project_endpoint}")
-    logger.info(f"Model deployment: {model_deployment_name}")
+    print_header("🧪 FACILITATOR AGENT SMOKE TEST")
+    print_info(f"📍 Endpoint: {project_endpoint}", dim=True)
+    print_info(f"🤖 Model: {model_deployment_name}", dim=True)
+    print()
     
     try:
         # Create AIProjectClient with DefaultAzureCredential
-        logger.info("Authenticating with Azure using DefaultAzureCredential...")
+        print_step("🔐", "Authenticating with Azure...")
         project_client = AIProjectClient(
             endpoint=project_endpoint,
             credential=DefaultAzureCredential(),
         )
         
         with project_client:
-            logger.info("Creating facilitator agent...")
+            print_step("🏗️", "Creating facilitator agent...")
+            
+            # Load system prompt from template
+            system_prompt = load_system_prompt()
             
             # Create agent with basic instructions
             agent = project_client.agents.create_agent(
                 model=model_deployment_name,
                 name="facilitator-smoke-test",
-                instructions="""You are a helpful facilitator agent for a product discovery system.
-                Your role is to help users find the right products by understanding their needs.
-                For this smoke test, simply acknowledge that you can help with product discovery.""",
+                instructions=system_prompt,
             )
-            logger.info(f"✓ Created agent with ID: {agent.id}")
+            print_success("✅", f"Created agent with ID: {Colors.DIM}{agent.id}{Colors.RESET}")
             
             # Create a thread for communication
-            logger.info("Creating conversation thread...")
+            print_step("💬", "Creating conversation thread...")
             thread = project_client.agents.threads.create()
-            logger.info(f"✓ Created thread with ID: {thread.id}")
+            print_success("✅", f"Created thread with ID: {Colors.DIM}{thread.id}{Colors.RESET}")
             
             # Send a test message
             test_message = "Hello! Can you help me find products?"
-            logger.info(f"Sending test message: '{test_message}'")
+            print_step("📤", f"Sending test message: {Colors.YELLOW}'{test_message}'{Colors.RESET}")
             
             message = project_client.agents.messages.create(
                 thread_id=thread.id,
                 role=MessageRole.USER,
                 content=test_message,
             )
-            logger.info(f"✓ Created message with ID: {message.id}")
+            print_success("✅", f"Created message with ID: {Colors.DIM}{message.id}{Colors.RESET}")
             
             # Create and process agent run
-            logger.info("Running agent and waiting for response...")
+            print_step("⚙️", "Running agent and waiting for response...")
             run = project_client.agents.runs.create_and_process(
                 thread_id=thread.id,
                 agent_id=agent.id
             )
-            logger.info(f"✓ Run completed with status: {run.status}")
+            print_success("✅", f"Run completed with status: {Colors.GREEN}{Colors.BOLD}{run.status}{Colors.RESET}")
             
             # Check for failures
             if run.status == "failed":
-                logger.error(f"✗ Run failed: {run.last_error}")
+                print_error("❌", f"Run failed: {run.last_error}")
                 return
             
             # Fetch and display messages
-            logger.info("Fetching agent response...")
+            print_step("📥", "Fetching agent response...")
             messages = project_client.agents.messages.list(thread_id=thread.id)
             
-            logger.info("\n" + "="*60)
-            logger.info("CONVERSATION TRANSCRIPT")
-            logger.info("="*60)
+            print_header("💬 CONVERSATION TRANSCRIPT")
             
             for msg in reversed(list(messages)):
                 role = msg.role.upper()
                 if msg.text_messages:
                     for text_msg in msg.text_messages:
-                        logger.info(f"\n{role}: {text_msg.text.value}")
+                        print_conversation_msg(role, text_msg.text.value)
+                        print()
             
-            logger.info("\n" + "="*60)
+            print(f"{Colors.CYAN}{'─'*70}{Colors.RESET}\n")
             
             # Clean up - delete the agent
-            logger.info(f"\nCleaning up - deleting agent {agent.id}...")
+            print_step("🧹", f"Cleaning up - deleting agent...")
             project_client.agents.delete_agent(agent.id)
-            logger.info("✓ Deleted agent")
+            print_success("✅", "Agent deleted")
             
-            logger.info("\n" + "🎉 SMOKE TEST PASSED! 🎉")
-            logger.info("The facilitator agent is working correctly.")
+            print(f"\n{Colors.BG_GREEN}{Colors.BOLD} 🎉 SMOKE TEST PASSED! 🎉 {Colors.RESET}")
+            print(f"{Colors.GREEN}The facilitator agent is working correctly.{Colors.RESET}\n")
             
     except Exception as e:
-        logger.error(f"\n✗ SMOKE TEST FAILED: {str(e)}")
+        print(f"\n{Colors.BG_RED}{Colors.BOLD} ❌ SMOKE TEST FAILED ❌ {Colors.RESET}")
+        print_error("💥", f"Error: {str(e)}")
         logger.exception("Full error details:")
         raise
 
