@@ -1,5 +1,5 @@
 """
-Smoke test for Facilitator agent using Azure AI Foundry Agent Service.
+Smoke test for Product Finder agent using Azure AI Foundry Agent Service.
 
 This script creates a basic agent, sends a test message, and verifies the response.
 """
@@ -94,7 +94,7 @@ def load_system_prompt() -> str:
 
 
 def main():
-    """Run smoke test for facilitator agent."""
+    """Run smoke test for product finder agent."""
     # Load environment variables from .env file
     load_dotenv()
     
@@ -112,7 +112,7 @@ def main():
         print_info("Please set MODEL_DEPLOYMENT_NAME in your .env file (e.g., gpt-4o)", dim=True)
         return
     
-    print_header("🧪 FACILITATOR AGENT SMOKE TEST")
+    print_header("🧪 PRODUCT FINDER AGENT SMOKE TEST")
     print_info(f"📍 Endpoint: {project_endpoint}", dim=True)
     print_info(f"🤖 Model: {model_deployment_name}", dim=True)
     print()
@@ -126,7 +126,7 @@ def main():
         )
         
         with project_client:
-            print_step("🏗️", "Creating facilitator agent...")
+            print_step("🏗️", "Creating product finder agent...")
             
             # Load system prompt from template
             system_prompt = load_system_prompt()
@@ -134,7 +134,7 @@ def main():
             # Create agent with basic instructions
             agent = project_client.agents.create_agent(
                 model=model_deployment_name,
-                name="facilitator-smoke-test",
+                name="product-finder-smoke-test",
                 instructions=system_prompt,
             )
             print_success("✅", f"Created agent with ID: {Colors.DIM}{agent.id}{Colors.RESET}")
@@ -145,7 +145,7 @@ def main():
             print_success("✅", f"Created thread with ID: {Colors.DIM}{thread.id}{Colors.RESET}")
             
             # Send a test message
-            test_message = "Hello! Can you help me find products?"
+            test_message = "Can you help me find products for someone with a nut allergy who likes organic food?"
             print_step("📤", f"Sending test message: {Colors.YELLOW}'{test_message}'{Colors.RESET}")
             
             message = project_client.agents.messages.create(
@@ -220,7 +220,7 @@ def main():
             print_success("✅", "Agent deleted")
             
             print(f"\n{Colors.BG_GREEN}{Colors.BOLD} 🎉 SMOKE TEST PASSED! 🎉 {Colors.RESET}")
-            print(f"{Colors.GREEN}The facilitator agent is working correctly.{Colors.RESET}\n")
+            print(f"{Colors.GREEN}The product finder agent is working correctly.{Colors.RESET}\n")
             
     except Exception as e:
         print(f"\n{Colors.BG_RED}{Colors.BOLD} ❌ SMOKE TEST FAILED ❌ {Colors.RESET}")
