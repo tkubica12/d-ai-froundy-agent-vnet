@@ -34,8 +34,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Suppress verbose Azure SDK logging
-logging.getLogger("azure").setLevel(logging.WARNING)
-logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
+logging.getLogger("azure").setLevel(logging.ERROR)
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.ERROR)
+logging.getLogger("azure.cosmos").setLevel(logging.ERROR)
+
+# Suppress verbose HTTP client logging
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+# Suppress embeddings client ERROR logs
+logging.getLogger("embeddings_client").setLevel(logging.WARNING)
 
 
 # Demo product data matching SolutionDesign.md schema
@@ -221,68 +228,43 @@ DEMO_PRODUCTS = [
 
 def generate_embedding(product: dict[str, Any]) -> list[float]:
     """
-    Generate an embedding vector for a product.
-    
-    Uses real Azure OpenAI embeddings if EMBEDDINGS_ENDPOINT is configured,
-    otherwise falls back to mock embeddings for testing.
+    Generate an embedding vector for a product using Azure OpenAI.
     
     Args:
         product: Product dictionary with id, name, tags, etc.
         
     Returns:
-        Embedding vector (2048 dimensions for real embeddings, or configured dimensions for mock)
+        Embedding vector with configured dimensions
+        
+    Raises:
+        RuntimeError: If embeddings endpoint is not configured
+        Exception: If embedding generation fails
     """
-    # Try to use real embeddings if configured
-    if settings.use_embeddings:
-        try:
-            from embeddings_client import get_embeddings_client
-            
-            # Create rich text representation for embedding
-            text_parts = [
-                product["name"],
-                product.get("description", ""),
-                f"Category: {product.get('category', '')}",
-                f"Tags: {', '.join(product.get('tags', []))}",
-            ]
-            
-            # Add key attributes
-            if "attributes" in product:
-                attrs = product["attributes"]
-                for key, value in attrs.items():
-                    text_parts.append(f"{key}: {value}")
-            
-            text = " | ".join(filter(None, text_parts))
-            
-            embeddings_client = get_embeddings_client()
-            embedding = embeddings_client.generate_embedding(text)
-            
-            logger.debug(f"Generated real embedding for {product['id']} ({len(embedding)} dimensions)")
-            return embedding
-            
-        except Exception as e:
-            logger.warning(f"Failed to generate real embedding for {product['id']}: {e}")
-            logger.warning("Falling back to mock embeddings")
+    if not settings.use_embeddings:
+        raise RuntimeError("Embeddings endpoint not configured - set EMBEDDINGS_ENDPOINT in .env")
     
-    # Fall back to mock embeddings
-    logger.debug(f"Using mock embedding for {product['id']}")
+    from embeddings_client import get_embeddings_client
     
-    # Use product ID as seed for consistency across runs
-    random.seed(hash(product["id"]))
+    # Create rich text representation for embedding
+    text_parts = [
+        product["name"],
+        product.get("description", ""),
+        f"Category: {product.get('category', '')}",
+        f"Tags: {', '.join(product.get('tags', []))}",
+    ]
     
-    # Generate vector with configured dimensions
-    embedding = [random.gauss(0, 0.1) for _ in range(settings.embeddings_dimensions)]
+    # Add key attributes
+    if "attributes" in product:
+        attrs = product["attributes"]
+        for key, value in attrs.items():
+            text_parts.append(f"{key}: {value}")
     
-    # Add some signal based on product attributes
-    # Products with similar tags will have slightly more similar embeddings
-    for i, tag in enumerate(product.get("tags", [])[:10]):
-        offset = hash(tag) % min(100, settings.embeddings_dimensions)
-        embedding[offset] += 0.2
+    text = " | ".join(filter(None, text_parts))
     
-    # Normalize to unit length
-    magnitude = sum(x * x for x in embedding) ** 0.5
-    if magnitude > 0:
-        embedding = [x / magnitude for x in embedding]
+    embeddings_client = get_embeddings_client()
+    embedding = embeddings_client.generate_embedding(text)
     
+    logger.debug(f"Generated embedding for {product['id']} ({len(embedding)} dimensions)")
     return embedding
 
 
@@ -329,7 +311,9 @@ async def clear_collection(container, collection_name: str) -> int:
                 container.delete_item(item["id"], partition_key=partition_key)
                 count += 1
             except Exception as e:
-                logger.warning(f"  Failed to delete {item['id']}: {e}")
+                # Silently skip NotFound errors (document already deleted)
+                if "NotFound" not in str(e):
+                    logger.warning(f"  Failed to delete {item['id']}: {e}")
         
         logger.info(f"  Deleted {count} documents from {collection_name}")
         

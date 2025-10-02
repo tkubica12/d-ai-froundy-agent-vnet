@@ -7,7 +7,7 @@ Uses DefaultAzureCredential for authentication (managed identity).
 
 import logging
 from typing import Any
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AzureOpenAI
 
 from config import settings
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # Suppress verbose Azure SDK logging
 logging.getLogger("azure").setLevel(logging.WARNING)
 logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
+logging.getLogger("openai").setLevel(logging.WARNING)
 
 
 class EmbeddingsClient:
@@ -31,14 +32,17 @@ class EmbeddingsClient:
 
         logger.info(f"Initializing Azure OpenAI embeddings client: {settings.embeddings_endpoint}")
         
-        # Use DefaultAzureCredential for authentication
+        # Use DefaultAzureCredential for authentication with get_bearer_token_provider
         credential = DefaultAzureCredential()
-        token_provider = credential.get_token("https://cognitiveservices.azure.com/.default")
+        token_provider = get_bearer_token_provider(
+            credential,
+            "https://cognitiveservices.azure.com/.default"
+        )
         
         self.client = AzureOpenAI(
             azure_endpoint=settings.embeddings_endpoint,
             api_version=settings.embeddings_api_version,
-            azure_ad_token=token_provider.token,
+            azure_ad_token_provider=token_provider,
         )
         
         logger.info(f"Embeddings client initialized - deployment: {settings.embeddings_deployment}, dimensions: {settings.embeddings_dimensions}")

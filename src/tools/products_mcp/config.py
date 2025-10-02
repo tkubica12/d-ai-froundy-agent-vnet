@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
 
-        @property
+    @property
     def use_managed_identity(self) -> bool:
         """Determine if we should use Managed Identity authentication."""
         return not self.cosmos_db_key or self.cosmos_db_key.strip() == ""

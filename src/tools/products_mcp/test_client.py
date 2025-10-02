@@ -7,6 +7,7 @@ Demonstrates in-memory transport for quick testing without network complexity.
 
 import asyncio
 import logging
+import pytest
 from fastmcp import Client, FastMCP
 
 # Configure logging
@@ -21,6 +22,7 @@ logging.getLogger("azure").setLevel(logging.WARNING)
 logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
 
 
+@pytest.mark.asyncio
 async def test_server():
     """Test all MCP server tools with sample data."""
     
@@ -156,6 +158,7 @@ async def test_server():
     logger.info("=== All Tests Complete ===")
 
 
+@pytest.mark.asyncio
 async def test_with_external_server(server_path: str = "./main.py"):
     """
     Test with external server using stdio transport.
