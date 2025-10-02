@@ -47,3 +47,15 @@ variable "jump_host_admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "jump_host_admin_ssh_key" {
+  description = <<-DESC
+    SSH public key for the jump host administrator account.
+    Enables SSH key authentication alongside password authentication.
+    Format: "ssh-rsa AAAAB3NzaC1yc2E... user@hostname"
+    Leave empty to use password-only authentication.
+  DESC
+  type        = string
+  sensitive   = true
+  default     = ""
+}

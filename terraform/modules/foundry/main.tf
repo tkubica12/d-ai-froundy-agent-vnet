@@ -6,6 +6,9 @@ locals {
   search_service_name  = substr("search${local.base_compact}", 0, 60)
   project_name         = substr("project-${local.base_compact}", 0, 63)
   capability_host_name = "caphost-standard"
+  
+  # Enable jump host AI User role only if principal_id is explicitly provided (not empty string)
+  enable_jump_host_access = var.jump_host_identity_principal_id != ""
 
   deployments = {
     "gpt-5" = {
@@ -511,8 +514,9 @@ resource "azurerm_role_assignment" "storage_blob_owner_restricted" {
 }
 
 # Grant jump host Azure AI User role to create and manage agents
+# Only created when jump_host_identity_principal_id is explicitly provided
 resource "azurerm_role_assignment" "jump_host_ai_user" {
-  count                = var.jump_host_identity_principal_id != null ? 1 : 0
+  count                = local.enable_jump_host_access ? 1 : 0
   scope                = azapi_resource.ai_foundry.id
   role_definition_name = "Azure AI User"
   principal_id         = var.jump_host_identity_principal_id

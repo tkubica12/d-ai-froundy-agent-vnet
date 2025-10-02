@@ -40,7 +40,7 @@ variable "private_dns_zone_ids" {
 
 variable "jump_host_identity_principal_id" {
   type        = string
-  description = "Principal ID of the jump host system-assigned managed identity for Azure AI User role assignment."
-  default     = null
+  description = "Principal ID of the jump host system-assigned managed identity for Azure AI User role assignment. Leave empty to skip."
+  default     = ""
 }
 

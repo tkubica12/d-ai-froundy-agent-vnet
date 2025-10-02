@@ -60,12 +60,13 @@ module "foundry" {
 module "jump" {
   source = "./modules/jump"
 
-  resource_group_name = azurerm_resource_group.main.name
-  location            = var.location
-  base_name           = local.base_name
-  tags                = var.tags
-  bastion_subnet_id   = module.networking.subnet_ids["snet-bastion"]
-  jump_subnet_id      = module.networking.subnet_ids["snet-jumphost"]
-  admin_username      = var.jump_host_admin_username
-  admin_password      = var.jump_host_admin_password
+  resource_group_name    = azurerm_resource_group.main.name
+  location               = var.location
+  base_name              = local.base_name
+  tags                   = var.tags
+  bastion_subnet_id      = module.networking.subnet_ids["snet-bastion"]
+  jump_subnet_id         = module.networking.subnet_ids["snet-jumphost"]
+  admin_username         = var.jump_host_admin_username
+  admin_password         = var.jump_host_admin_password
+  admin_ssh_public_key   = var.jump_host_admin_ssh_key
 }

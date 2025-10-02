@@ -85,6 +85,15 @@ resource "azurerm_linux_virtual_machine" "jump" {
   tags                            = var.tags
   computer_name                   = substr("jump${replace(var.base_name, "-", "")}", 0, 15)
 
+  # Configure SSH key if provided (alongside password authentication)
+  dynamic "admin_ssh_key" {
+    for_each = var.admin_ssh_public_key != "" ? [1] : []
+    content {
+      username   = var.admin_username
+      public_key = var.admin_ssh_public_key
+    }
+  }
+
   os_disk {
     name                 = "osdisk-jump-${var.base_name}"
     caching              = "ReadWrite"
