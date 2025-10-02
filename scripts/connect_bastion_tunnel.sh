@@ -1,0 +1,1 @@
+az network bastion tunnel --name bastion-daf-cpld --resource-group rg-daf-cpld --target-ip-address 172.21.16.4 --resource-port 22 --port 2222

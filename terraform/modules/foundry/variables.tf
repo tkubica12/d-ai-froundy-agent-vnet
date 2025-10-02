@@ -25,12 +25,12 @@ variable "tags" {
 
 variable "agent_subnet_id" {
   type        = string
-  description = "Subnet ID delegated to Microsoft.App/environments for agent network injection." 
+  description = "Subnet ID delegated to Microsoft.App/environments for agent network injection."
 }
 
 variable "private_endpoint_subnet_id" {
   type        = string
-  description = "Subnet ID hosting private endpoints for Foundry supporting services." 
+  description = "Subnet ID hosting private endpoints for Foundry supporting services."
 }
 
 variable "private_dns_zone_ids" {

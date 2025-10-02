@@ -111,6 +111,7 @@ resource "azurerm_firewall" "main" {
   resource_group_name = var.resource_group_name
   sku_name            = "AZFW_VNet"
   sku_tier            = "Basic"
+  firewall_policy_id  = azurerm_firewall_policy.main.id
   tags                = var.tags
 
   ip_configuration {
@@ -123,27 +124,6 @@ resource "azurerm_firewall" "main" {
     name                 = "management"
     subnet_id            = azurerm_subnet.main["snet-firewall-mgmt"].id
     public_ip_address_id = azurerm_public_ip.firewall_management.id
-  }
-}
-
-resource "azurerm_firewall_application_rule_collection" "allowlist" {
-  name                = "fwapp-${var.base_name}"
-  azure_firewall_name = azurerm_firewall.main.name
-  resource_group_name = var.resource_group_name
-  priority            = 100
-  action              = "Allow"
-
-  rule {
-    name = "essential-fqdns"
-
-    protocol {
-      port = 443
-      type = "Https"
-    }
-
-    target_fqdns     = var.firewall_allowed_fqdns
-    source_addresses = ["0.0.0.0/0"]
-    description      = "Allow outbound traffic required for platform dependencies"
   }
 }
 

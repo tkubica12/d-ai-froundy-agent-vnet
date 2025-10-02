@@ -1,10 +1,10 @@
 locals {
-  default_backend_image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
-  default_frontend_image = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
-  backend_image          = coalesce(var.backend_image, local.default_backend_image)
-  frontend_image         = coalesce(var.frontend_image, local.default_frontend_image)
-  acr_login_server       = azurerm_container_registry.main.login_server
-  backend_image_uses_acr = startswith(local.backend_image, "${local.acr_login_server}/")
+  default_backend_image   = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+  default_frontend_image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+  backend_image           = coalesce(var.backend_image, local.default_backend_image)
+  frontend_image          = coalesce(var.frontend_image, local.default_frontend_image)
+  acr_login_server        = azurerm_container_registry.main.login_server
+  backend_image_uses_acr  = startswith(local.backend_image, "${local.acr_login_server}/")
   frontend_image_uses_acr = startswith(local.frontend_image, "${local.acr_login_server}/")
 }
 
