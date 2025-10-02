@@ -35,5 +35,5 @@ output "ssh_command" {
 
 output "tunnel_command_example" {
   description = "Example command to create SSH tunnel via Azure Bastion (replace ports as needed)."
-  value       = "az network bastion tunnel --name ${azurerm_bastion_host.main.name} --resource-group ${var.resource_group_name} --target-resource-id ${azurerm_linux_virtual_machine.jump.id} --resource-port 22 --port 2222"
+  value       = "az network bastion tunnel --name ${azurerm_bastion_host.main.name} --resource-group ${var.resource_group_name} --target-ip-address ${azurerm_network_interface.jump.ip_configuration[0].private_ip_address} --resource-port 22 --port 2222"
 }

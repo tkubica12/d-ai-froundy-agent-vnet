@@ -111,6 +111,25 @@ resource "azurerm_firewall_policy_rule_collection_group" "developer_tools" {
   }
 
   application_rule_collection {
+    name     = "python-uv-astral"
+    priority = 225
+    action   = "Allow"
+
+    rule {
+      name = "uv-installer"
+      protocols {
+        type = "Https"
+        port = 443
+      }
+      source_addresses = ["*"]
+      destination_fqdns = [
+        "astral.sh",
+        "*.astral.sh"
+      ]
+    }
+  }
+
+  application_rule_collection {
     name     = "vscode"
     priority = 230
     action   = "Allow"
