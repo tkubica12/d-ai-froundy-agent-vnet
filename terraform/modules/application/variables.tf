@@ -44,3 +44,14 @@ variable "frontend_image" {
   description = "Container image for the React assistant UI."
   default     = null
 }
+
+variable "jump_vm_principal_id" {
+  type        = string
+  description = <<-DESC
+    Principal ID (object ID) of the jump VM's system-assigned managed identity.
+    Used to grant Cosmos DB RBAC access for testing the MCP server from the jump host.
+    Optional - if not provided, jump VM will not have data plane access.
+  DESC
+  default     = null
+}
+

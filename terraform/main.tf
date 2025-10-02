@@ -40,6 +40,7 @@ module "application" {
   private_dns_zone_ids = module.networking.private_dns_zone_ids
   backend_image        = var.backend_image
   frontend_image       = var.frontend_image
+  jump_vm_principal_id = module.jump.jump_host_identity_principal_id
 }
 
 module "foundry" {

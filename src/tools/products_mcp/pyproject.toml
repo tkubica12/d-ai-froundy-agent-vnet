@@ -1,0 +1,20 @@
+[project]
+name = "products-mcp"
+version = "0.1.0"
+description = "MCP server for product catalog tools with Azure Cosmos DB integration"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=2.4.0",
+    "azure-cosmos>=4.8.0",
+    "azure-identity>=1.19.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
