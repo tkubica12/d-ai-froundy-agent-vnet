@@ -385,8 +385,6 @@ resource "azurerm_role_assignment" "cosmos_operator" {
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
 
   depends_on = [time_sleep.wait_project_identity]
-
-  name = uuidv5("dns", "${local.project_name}-${azurerm_cosmosdb_account.agent.name}-cosmos-operator")
 }
 
 resource "azurerm_role_assignment" "storage_blob_contributor" {
@@ -395,8 +393,6 @@ resource "azurerm_role_assignment" "storage_blob_contributor" {
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
 
   depends_on = [time_sleep.wait_project_identity]
-
-  name = uuidv5("dns", "${local.project_name}-${azurerm_storage_account.agent.name}-blob-contributor")
 }
 
 resource "azurerm_role_assignment" "search_index_data_contributor" {
@@ -405,8 +401,6 @@ resource "azurerm_role_assignment" "search_index_data_contributor" {
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
 
   depends_on = [time_sleep.wait_project_identity]
-
-  name = uuidv5("dns", "${local.project_name}-${local.search_service_name}-search-index")
 }
 
 resource "azurerm_role_assignment" "search_service_contributor" {
@@ -415,8 +409,6 @@ resource "azurerm_role_assignment" "search_service_contributor" {
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
 
   depends_on = [time_sleep.wait_project_identity]
-
-  name = uuidv5("dns", "${local.project_name}-${local.search_service_name}-search-service")
 }
 
 resource "time_sleep" "wait_rbac" {
@@ -516,8 +508,6 @@ resource "azurerm_role_assignment" "storage_blob_owner_restricted" {
         AND @Resource[Microsoft.Storage/storageAccounts/blobServices/containers:name] StringLikeIgnoreCase '*-azureml-agent')
     )
   EOT
-
-  name = uuidv5("dns", "${local.project_name}-${azurerm_storage_account.agent.name}-blob-owner")
 }
 
 # Grant jump host Azure AI User role to create and manage agents
@@ -528,6 +518,4 @@ resource "azurerm_role_assignment" "jump_host_ai_user" {
   principal_id         = var.jump_host_identity_principal_id
 
   depends_on = [azapi_resource.ai_foundry_project]
-
-  name = uuidv5("dns", "${local.project_name}-jump-host-ai-user")
 }
