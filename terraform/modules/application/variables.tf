@@ -59,9 +59,7 @@ variable "jump_vm_principal_id" {
   description = <<-DESC
     Principal ID (object ID) of the jump VM's system-assigned managed identity.
     Used to grant Cosmos DB RBAC access for testing the MCP server from the jump host.
-    Optional - if not provided (empty string), jump VM will not have data plane access.
   DESC
-  default     = ""
 }
 
 variable "embeddings_endpoint" {

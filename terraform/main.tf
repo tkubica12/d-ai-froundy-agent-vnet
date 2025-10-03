@@ -72,3 +72,25 @@ module "jump" {
   admin_password       = var.jump_host_admin_password
   admin_ssh_public_key = var.jump_host_admin_ssh_key
 }
+
+module "config_files" {
+  source = "./modules/config_files"
+
+  # Repository path
+  repo_root = var.repo_root
+
+  # Infrastructure values from deployed resources
+  acr_name                  = module.application.container_registry_name
+  cosmos_endpoint           = module.application.cosmos_account_endpoint
+  cosmos_database_name      = module.application.cosmos_database_name
+  embeddings_endpoint       = module.foundry.cognitive_account_endpoint
+  embeddings_deployment     = module.foundry.embeddings_deployment_name
+  foundry_project_endpoint  = module.foundry.cognitive_account_endpoint
+  model_deployment_name     = module.foundry.llm_deployment_name
+  resource_group_name       = azurerm_resource_group.main.name
+  bastion_name              = module.jump.bastion_host_name
+  jump_host_private_ip      = module.jump.jump_host_private_ip
+
+  # Configurable settings
+  log_level = var.log_level
+}

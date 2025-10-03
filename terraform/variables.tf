@@ -59,3 +59,27 @@ variable "jump_host_admin_ssh_key" {
   sensitive   = true
   default     = ""
 }
+
+# Configuration Files Module Variables
+
+variable "repo_root" {
+  description = <<-DESC
+    Absolute path to the repository root directory for generating configuration files.
+    This should point to the root of the Git repository (parent of src/, deploy/, scripts/).
+    
+    Example Windows: "C:/git/d-ai-froundy-agent-vnet"
+    Example Linux: "/home/user/repos/d-ai-froundy-agent-vnet"
+  DESC
+  type        = string
+}
+
+variable "log_level" {
+  description = "Python logging level for application components (DEBUG, INFO, WARNING, ERROR, CRITICAL)."
+  type        = string
+  default     = "INFO"
+  
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], var.log_level)
+    error_message = "log_level must be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL"
+  }
+}

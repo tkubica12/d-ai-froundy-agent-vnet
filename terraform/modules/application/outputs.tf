@@ -3,6 +3,11 @@ output "cosmos_account_id" {
   value       = azurerm_cosmosdb_account.main.id
 }
 
+output "cosmos_account_endpoint" {
+  description = "HTTPS endpoint URL of the Cosmos DB account."
+  value       = azurerm_cosmosdb_account.main.endpoint
+}
+
 output "cosmos_database_name" {
   description = "Primary database name used by the application."
   value       = azurerm_cosmosdb_sql_database.main.name
@@ -11,6 +16,11 @@ output "cosmos_database_name" {
 output "container_registry_login_server" {
   description = "ACR login server for container pulls."
   value       = azurerm_container_registry.main.login_server
+}
+
+output "container_registry_name" {
+  description = "Name of the Azure Container Registry (without .azurecr.io suffix)."
+  value       = azurerm_container_registry.main.name
 }
 
 output "backend_container_app_fqdn" {

@@ -20,3 +20,18 @@ output "model_deployment_ids" {
     deployment_name => deployment.id
   }
 }
+
+output "model_deployment_names" {
+  description = "List of deployed model names for agent configuration."
+  value       = keys(azapi_resource.deployment)
+}
+
+output "embeddings_deployment_name" {
+  description = "Name of the embeddings model deployment."
+  value       = "text-embedding-3-large"
+}
+
+output "llm_deployment_name" {
+  description = "Name of the primary LLM deployment for agents."
+  value       = "gpt-5"
+}
