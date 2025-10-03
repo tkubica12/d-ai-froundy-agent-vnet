@@ -4,7 +4,7 @@ FastMCP-based Model Context Protocol server that exposes product catalog utiliti
 
 ## Features
 
-- **Vector Search**: Cosine similarity search on product embeddings (1536 dimensions)
+- **Vector Search**: Cosine similarity search on product embeddings (2048 dimensions using text-embedding-3-large)
 - **Pricing Lookup**: Batch pricing retrieval for multiple products
 - **Stock Availability**: Real-time inventory checking
 - **Intelligent Ranking**: Heuristic-based product recommendation scoring
@@ -79,6 +79,42 @@ uv run python test_client.py --external
 
 ## Deployment
 
+### Docker Container
+
+Build and run the MCP server in a container:
+
+```bash
+# Build the Docker image
+docker build -t products-mcp:latest .
+
+# Run locally with environment variables
+docker run --rm \
+  -e COSMOS_DB_ENDPOINT="https://your-cosmos.documents.azure.com:443/" \
+  -e COSMOS_DB_NAME="appdb" \
+  -e EMBEDDINGS_ENDPOINT="https://your-openai.cognitiveservices.azure.com" \
+  -e EMBEDDINGS_DEPLOYMENT="text-embedding-3-large" \
+  -p 8080:8080 \
+  products-mcp:latest
+
+# For local development with Azure CLI credentials (mount .azure directory)
+docker run --rm \
+  -v ~/.azure:/home/appuser/.azure:ro \
+  -e COSMOS_DB_ENDPOINT="https://your-cosmos.documents.azure.com:443/" \
+  --env-file .env \
+  products-mcp:latest
+```
+
+**Dockerfile Features:**
+- Uses `uv` package manager for fast, reliable dependency installation
+- Multi-stage build for optimized image size
+- Non-root user (appuser) for security
+- Health check for container orchestration
+- Frozen lockfile for reproducible builds
+
+**Alternative Dockerfiles:**
+- `Dockerfile` - Multi-stage build (smaller final image)
+- `Dockerfile.simple` - Single-stage build (faster rebuilds during development)
+
 ### Azure Container Apps
 
 The server is designed to run in Azure Container Apps with:
@@ -87,6 +123,16 @@ The server is designed to run in Azure Container Apps with:
 - Environment variables injected from Terraform
 
 Terraform automatically grants the backend container app identity access to Cosmos DB via RBAC.
+
+**ACR Push Example:**
+```bash
+# Tag for Azure Container Registry
+docker tag products-mcp:latest <your-acr>.azurecr.io/products-mcp:latest
+
+# Push to ACR (after az acr login)
+az acr login --name <your-acr>
+docker push <your-acr>.azurecr.io/products-mcp:latest
+```
 
 ### Testing from Jump Host
 
@@ -200,7 +246,7 @@ If you see `DefaultAzureCredential failed to retrieve a token`:
 
 - Confirm products collection has data with embeddings
 - Check vector index is created (see `cosmos.tf`)
-- Verify embedding dimensions match (1536)
+- Verify embedding dimensions match (2048 for text-embedding-3-large)
 
 ## References
 
