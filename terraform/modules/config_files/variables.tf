@@ -13,6 +13,11 @@ variable "acr_name" {
   description = "Name of the Azure Container Registry for build/push operations."
 }
 
+variable "base_name" {
+  type        = string
+  description = "Base name used for resource naming (extracted from ACR or resource group naming convention)."
+}
+
 variable "cosmos_endpoint" {
   type        = string
   description = "Azure Cosmos DB account endpoint URI (e.g., https://cosmosname.documents.azure.com:443/)."

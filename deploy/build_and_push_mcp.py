@@ -5,7 +5,6 @@ This script uses ACR's remote build capability to build the Docker image in Azur
 """
 
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -92,8 +91,12 @@ def check_azure_login() -> dict:
         sys.exit(1)
 
 
-def trigger_acr_build(acr_name: str, image_name: str, image_tag: str, context_path: Path) -> None:
-    """Trigger Azure Container Registry remote build."""
+def trigger_acr_build(acr_name: str, image_name: str, image_tag: str, context_path: Path) -> str:
+    """Trigger Azure Container Registry remote build.
+    
+    Returns:
+        Full image reference (registry.azurecr.io/image:tag)
+    """
     print_color("\nStarting ACR remote build...", Colors.CYAN)
     print_color("This will upload the build context to Azure and build the image in ACR.", Colors.YELLOW)
     print()
@@ -116,19 +119,79 @@ def trigger_acr_build(acr_name: str, image_name: str, image_tag: str, context_pa
         # Run the build command with live output
         result = subprocess.run(cmd, check=True)
         
+        image_ref = f"{acr_name}.azurecr.io/{image_name}:{image_tag}"
+        
         if result.returncode == 0:
             print()
             print_color("═" * 63, Colors.GREEN)
             print_color("✓ Build completed successfully!", Colors.GREEN)
             print_color("═" * 63, Colors.GREEN)
-            print_color(f"Image: {acr_name}.azurecr.io/{image_name}:{image_tag}", Colors.YELLOW)
+            print_color(f"Image: {image_ref}", Colors.YELLOW)
             print()
+            return image_ref
         else:
             print_color(f"✗ ACR build failed with exit code {result.returncode}", Colors.RED)
             sys.exit(1)
             
     except subprocess.CalledProcessError as e:
         print_color(f"✗ Failed to execute ACR build: {e}", Colors.RED)
+        sys.exit(1)
+
+
+def update_container_app(resource_group: str, container_app_name: str, image_ref: str) -> None:
+    """Update Container App with new image.
+    
+    Args:
+        resource_group: Azure resource group name
+        container_app_name: Container App name
+        image_ref: Full image reference (registry.azurecr.io/image:tag)
+    """
+    print_color("\nUpdating Container App...", Colors.CYAN)
+    print_color(f"Container App: {container_app_name}", Colors.YELLOW)
+    print_color(f"Resource Group: {resource_group}", Colors.YELLOW)
+    print_color(f"New Image: {image_ref}", Colors.YELLOW)
+    print()
+    
+    cmd = [
+        'az', 'containerapp', 'update',
+        '--name', container_app_name,
+        '--resource-group', resource_group,
+        '--image', image_ref,
+        '--output', 'json'
+    ]
+    
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        update_info = json.loads(result.stdout)
+        latest_revision = update_info.get('properties', {}).get('latestRevisionName', 'unknown')
+        
+        print()
+        print_color("═" * 63, Colors.GREEN)
+        print_color("✓ Container App updated successfully!", Colors.GREEN)
+        print_color("═" * 63, Colors.GREEN)
+        print_color(f"Latest Revision: {latest_revision}", Colors.YELLOW)
+        print_color(f"Container App: {container_app_name}", Colors.YELLOW)
+        print()
+        
+    except subprocess.CalledProcessError as e:
+        print_color(f"✗ Failed to update Container App: {e}", Colors.RED)
+        if e.stderr:
+            print_color(f"Error details: {e.stderr}", Colors.RED)
+        print_color("\nNote: The image was built successfully and is available in ACR.", Colors.YELLOW)
+        print_color("You can manually update the Container App using:", Colors.YELLOW)
+        print_color(f"  az containerapp update --name {container_app_name} \\", Colors.CYAN)
+        print_color(f"    --resource-group {resource_group} \\", Colors.CYAN)
+        print_color(f"    --image {image_ref}", Colors.CYAN)
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print_color(f"✗ Failed to parse Container App update response: {e}", Colors.RED)
+        print_color("The Container App may have been updated, but response parsing failed.", Colors.YELLOW)
         sys.exit(1)
 
 
@@ -148,18 +211,34 @@ def main() -> None:
     
     # Validate required environment variables
     acr_name = env_vars.get('ACR_NAME')
+    resource_group = env_vars.get('RESOURCE_GROUP')
+    base_name = env_vars.get('BASE_NAME')
+    
     if not acr_name:
         print_color("✗ ACR_NAME is not set in .env file", Colors.RED)
         sys.exit(1)
     
+    if not resource_group:
+        print_color("✗ RESOURCE_GROUP is not set in .env file", Colors.RED)
+        sys.exit(1)
+    
+    if not base_name:
+        print_color("✗ BASE_NAME is not set in .env file", Colors.RED)
+        sys.exit(1)
+    
+    # Construct container app name
+    container_app_name = f"aca-mcp-daf-{base_name}"
+    
     # Print banner
     print()
     print_color("═" * 63, Colors.GREEN)
-    print_color("Azure Container Registry Remote Build", Colors.GREEN)
+    print_color("Azure Container Registry Build & Deploy", Colors.GREEN)
     print_color("═" * 63, Colors.GREEN)
-    print_color(f"Registry:  {acr_name}.azurecr.io", Colors.YELLOW)
-    print_color(f"Image:     {image_name}:{image_tag}", Colors.YELLOW)
-    print_color(f"Context:   {context_path}", Colors.YELLOW)
+    print_color(f"Registry:       {acr_name}.azurecr.io", Colors.YELLOW)
+    print_color(f"Image:          {image_name}:{image_tag}", Colors.YELLOW)
+    print_color(f"Context:        {context_path}", Colors.YELLOW)
+    print_color(f"Container App:  {container_app_name}", Colors.YELLOW)
+    print_color(f"Resource Group: {resource_group}", Colors.YELLOW)
     print_color("═" * 63, Colors.GREEN)
     print()
     
@@ -168,7 +247,10 @@ def main() -> None:
     check_azure_login()
     
     # Trigger the build
-    trigger_acr_build(acr_name, image_name, image_tag, context_path)
+    image_ref = trigger_acr_build(acr_name, image_name, image_tag, context_path)
+    
+    # Update the Container App with the new image
+    update_container_app(resource_group, container_app_name, image_ref)
 
 
 if __name__ == "__main__":

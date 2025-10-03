@@ -81,6 +81,7 @@ module "config_files" {
 
   # Infrastructure values from deployed resources
   acr_name                  = module.application.container_registry_name
+  base_name                 = local.base_name
   cosmos_endpoint           = module.application.cosmos_account_endpoint
   cosmos_database_name      = module.application.cosmos_database_name
   embeddings_endpoint       = module.foundry.cognitive_account_endpoint

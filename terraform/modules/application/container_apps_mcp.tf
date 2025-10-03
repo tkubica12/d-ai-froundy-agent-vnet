@@ -73,6 +73,14 @@ resource "azurerm_container_app" "mcp" {
       identity = azurerm_user_assigned_identity.mcp.id
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore image changes - initial deployment uses placeholder image,
+      # real image deployed via build_and_push_mcp.py script
+      template[0].container[0].image
+    ]
+  }
 }
 
 # Private endpoint for MCP server access from within the VNet

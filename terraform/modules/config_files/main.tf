@@ -1,4 +1,4 @@
-# Configuration Files Module
+# Config Files Module
 #
 # This module generates environment configuration files (.env) for various components
 # of the solution. It uses Terraform's templatefile function to inject dynamic values
@@ -9,7 +9,9 @@
 resource "local_file" "deploy_env" {
   filename = "${var.repo_root}/deploy/.env"
   content = templatefile("${path.module}/templates/deploy.env.tftpl", {
-    acr_name = var.acr_name
+    acr_name            = var.acr_name
+    resource_group_name = var.resource_group_name
+    base_name           = var.base_name
   })
   file_permission = "0644"
 }

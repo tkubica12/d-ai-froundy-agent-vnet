@@ -1,11 +1,15 @@
 # Shared resources for all Container Apps
 
 locals {
+  # Use Microsoft placeholder images for initial deployment
+  # After Terraform creates infrastructure, build and push real images with deploy/build_and_push_mcp.py
+  # Terraform will ignore image changes after initial deployment (see lifecycle blocks)
   default_backend_image   = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
   default_frontend_image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+  default_mcp_image       = "mcr.microsoft.com/k8se/quickstart:latest"  # Changed from ACR image
   backend_image           = coalesce(var.backend_image, local.default_backend_image)
   frontend_image          = coalesce(var.frontend_image, local.default_frontend_image)
-  mcp_image               = coalesce(var.mcp_image, "${azurerm_container_registry.main.login_server}/products-mcp:latest")
+  mcp_image               = coalesce(var.mcp_image, local.default_mcp_image)
   acr_login_server        = azurerm_container_registry.main.login_server
   backend_image_uses_acr  = startswith(local.backend_image, "${local.acr_login_server}/")
   frontend_image_uses_acr = startswith(local.frontend_image, "${local.acr_login_server}/")

@@ -48,4 +48,11 @@ resource "azurerm_container_app" "backend" {
       identity = azurerm_user_assigned_identity.backend.id
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore image changes - deployed via CI/CD or manual updates
+      template[0].container[0].image
+    ]
+  }
 }
