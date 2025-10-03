@@ -8,6 +8,11 @@ output "cognitive_account_endpoint" {
   value       = tostring(azapi_resource.ai_foundry.output["properties"]["endpoint"])
 }
 
+output "project_endpoint" {
+  description = "Full project endpoint URI for Azure AI Foundry agents (format: https://project-name.services.ai.azure.com/api/projects/project-id)."
+  value       = "${tostring(azapi_resource.ai_foundry.output["properties"]["endpoint"])}api/projects/${local.project_id_guid}"
+}
+
 output "embeddings_endpoint" {
   description = "Endpoint URI for embeddings model deployment (for use with Azure OpenAI SDK)."
   value       = "${tostring(azapi_resource.ai_foundry.output["properties"]["endpoint"])}models"

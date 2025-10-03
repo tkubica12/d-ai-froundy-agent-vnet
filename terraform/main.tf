@@ -86,7 +86,7 @@ module "config_files" {
   cosmos_database_name      = module.application.cosmos_database_name
   embeddings_endpoint       = module.foundry.cognitive_account_endpoint
   embeddings_deployment     = module.foundry.embeddings_deployment_name
-  foundry_project_endpoint  = module.foundry.cognitive_account_endpoint
+  foundry_project_endpoint  = module.foundry.project_endpoint
   model_deployment_name     = module.foundry.llm_deployment_name
   resource_group_name       = azurerm_resource_group.main.name
   bastion_name              = module.jump.bastion_host_name

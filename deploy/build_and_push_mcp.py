@@ -227,7 +227,7 @@ def main() -> None:
         sys.exit(1)
     
     # Construct container app name
-    container_app_name = f"aca-mcp-daf-{base_name}"
+    container_app_name = f"aca-mcp-{base_name}"
     
     # Print banner
     print()

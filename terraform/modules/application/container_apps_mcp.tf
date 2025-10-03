@@ -66,12 +66,9 @@ resource "azurerm_container_app" "mcp" {
     }
   }
 
-  dynamic "registry" {
-    for_each = local.mcp_image_uses_acr ? [1] : []
-    content {
-      server   = local.acr_login_server
-      identity = azurerm_user_assigned_identity.mcp.id
-    }
+  registry {
+    server   = local.acr_login_server
+    identity = azurerm_user_assigned_identity.mcp.id
   }
 
   lifecycle {
