@@ -45,11 +45,19 @@ runcmd:
   
   # Install uv (Python package manager)
   - curl -LsSf https://astral.sh/uv/install.sh | sh
-  - echo 'export PATH="/root/.cargo/bin:$PATH"' >> /etc/profile.d/uv.sh
+  - echo 'export PATH="/root/.local/bin:$PATH"' >> /etc/profile.d/uv.sh
   - echo 'eval "$(uv generate-shell-completion bash)"' >> /etc/profile.d/uv.sh
   
   # Make uv available system-wide
-  - ln -sf /root/.cargo/bin/uv /usr/local/bin/uv
+  - ln -sf /root/.local/bin/uv /usr/local/bin/uv
+  
+  # Configure git for root user
+  - git config --global user.email "tkubica12@gmail.com"
+  - git config --global user.name "Tomas Kubica"
+  
+  # Configure git for azureuser
+  - sudo -u azureuser git config --global user.email "tkubica12@gmail.com"
+  - sudo -u azureuser git config --global user.name "Tomas Kubica"
   
   # Restart SSH to apply config changes
   - systemctl restart sshd
