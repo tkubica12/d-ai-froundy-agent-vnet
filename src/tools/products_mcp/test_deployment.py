@@ -6,21 +6,23 @@ This test uses SSE (Server-Sent Events) transport over HTTP to connect
 to the remote MCP server endpoint.
 
 Usage:
-    # Set environment variable with your MCP endpoint
-    export MCP_ENDPOINT=https://aca-mcp-xyz.internal.region.azurecontainerapps.io
+    # Pass endpoint as argument
+    uv run python test_deployment.py https://aca-mcp-xyz.internal.region.azurecontainerapps.io
     
-    # Run the test
+    # Or set environment variable
+    export MCP_ENDPOINT=https://aca-mcp-xyz.internal.region.azurecontainerapps.io
     uv run python test_deployment.py
     
     # Or run with pytest
     uv run pytest test_deployment.py -v -s
 
 Requirements:
-    - MCP_ENDPOINT environment variable must be set
+    - MCP endpoint as argument or MCP_ENDPOINT environment variable must be set
     - Network connectivity to the MCP server (e.g., from jump VM or VPN)
     - MCP server must be running and healthy
 """
 
+import argparse
 import asyncio
 import logging
 import os
@@ -41,13 +43,27 @@ logger = logging.getLogger(__name__)
 logging.getLogger("azure").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
+# Global variable to store endpoint for pytest
+_test_endpoint: Optional[str] = None
 
-def get_mcp_endpoint() -> Optional[str]:
-    """Get MCP endpoint from environment variable."""
-    endpoint = os.getenv("MCP_ENDPOINT")
+
+def get_mcp_endpoint(endpoint_arg: Optional[str] = None) -> Optional[str]:
+    """
+    Get MCP endpoint from argument or environment variable.
+    
+    Args:
+        endpoint_arg: Optional endpoint passed as command-line argument
+        
+    Returns:
+        MCP endpoint URL or None if not configured
+    """
+    # Prioritize command-line argument over environment variable
+    endpoint = endpoint_arg or os.getenv("MCP_ENDPOINT")
+    
     if not endpoint:
-        logger.error("MCP_ENDPOINT environment variable is not set")
-        logger.error("Example: export MCP_ENDPOINT=https://aca-mcp-xyz.internal.region.azurecontainerapps.io")
+        logger.error("MCP endpoint not provided")
+        logger.error("Usage: python test_deployment.py <endpoint>")
+        logger.error("   or: export MCP_ENDPOINT=https://aca-mcp-xyz.internal.region.azurecontainerapps.io")
         return None
     
     # Ensure endpoint has proper format
@@ -62,7 +78,8 @@ def get_mcp_endpoint() -> Optional[str]:
 async def test_deployed_mcp_server():
     """Test the deployed MCP server with comprehensive tool validation."""
     
-    endpoint = get_mcp_endpoint()
+    # Get endpoint from global variable (set by main) or environment
+    endpoint = _test_endpoint or get_mcp_endpoint()
     if not endpoint:
         pytest.skip("MCP_ENDPOINT not configured")
     
@@ -130,8 +147,8 @@ async def test_deployed_mcp_server():
             # Test 4: Vector search with mock embedding
             logger.info("Test 4: Vector search products")
             try:
-                # Create a mock 1536-dimensional embedding
-                mock_embedding = [0.1] * 1536
+                # Create a mock 2048-dimensional embedding
+                mock_embedding = [0.1] * 2048
                 mock_embedding[0] = 1.0
                 
                 result = await client.call_tool(
@@ -227,9 +244,35 @@ async def test_deployed_mcp_server():
 
 async def main():
     """Main entry point for running tests directly."""
-    endpoint = get_mcp_endpoint()
+    global _test_endpoint
+    
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Test deployed MCP server",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python test_deployment.py https://aca-mcp-xyz.internal.region.azurecontainerapps.io
+  python test_deployment.py aca-mcp-xyz.internal.region.azurecontainerapps.io
+  
+  export MCP_ENDPOINT=https://aca-mcp-xyz.internal.region.azurecontainerapps.io
+  python test_deployment.py
+        """
+    )
+    parser.add_argument(
+        "endpoint",
+        nargs="?",
+        help="MCP server endpoint URL (or set MCP_ENDPOINT environment variable)"
+    )
+    
+    args = parser.parse_args()
+    
+    endpoint = get_mcp_endpoint(args.endpoint)
     if not endpoint:
         sys.exit(1)
+    
+    # Set global endpoint for test function
+    _test_endpoint = endpoint
     
     try:
         await test_deployed_mcp_server()
