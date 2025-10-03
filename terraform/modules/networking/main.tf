@@ -2,6 +2,14 @@ locals {
   vnet_cidr      = var.address_space[0]
   subnet_newbits = 6
 
+  # Merge static DNS zones with region-specific Container Apps DNS zone
+  private_dns_zones = merge(
+    var.private_dns_zone_names,
+    {
+      aca = "privatelink.${var.location}.azurecontainerapps.io"
+    }
+  )
+
   subnet_plan = {
     snet-aca = {
       name  = "snet-aca"
@@ -157,14 +165,14 @@ resource "azurerm_subnet_route_table_association" "egress" {
 }
 
 resource "azurerm_private_dns_zone" "this" {
-  for_each            = var.private_dns_zone_names
+  for_each            = local.private_dns_zones
   name                = each.value
   resource_group_name = var.resource_group_name
   tags                = var.tags
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "this" {
-  for_each              = var.private_dns_zone_names
+  for_each              = local.private_dns_zones
   name                  = "vnet-link-${var.base_name}-${each.key}"
   resource_group_name   = var.resource_group_name
   private_dns_zone_name = azurerm_private_dns_zone.this[each.key].name

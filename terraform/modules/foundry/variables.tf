@@ -40,17 +40,11 @@ variable "private_dns_zone_ids" {
 
 variable "jump_host_identity_principal_id" {
   type        = string
-  description = "Principal ID of the jump host system-assigned managed identity for Azure AI User role assignment. Leave empty to skip."
-  default     = ""
+  description = "Principal ID of the jump host system-assigned managed identity for Azure AI User role assignment."
 }
 
 variable "mcp_identity_principal_id" {
   type        = string
-  description = <<-DESC
-    Principal ID of the MCP server user-assigned managed identity.
-    Used to grant Cognitive Services OpenAI User role for embeddings access.
-    Leave empty to skip.
-  DESC
-  default     = ""
+  description = "Principal ID of the MCP server user-assigned managed identity used to grant Cognitive Services OpenAI User role for embeddings access."
 }
 

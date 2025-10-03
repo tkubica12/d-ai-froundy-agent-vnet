@@ -114,6 +114,10 @@ resource "azurerm_linux_virtual_machine" "jump" {
   custom_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
     admin_username = var.admin_username
   }))
+
+  lifecycle {
+    ignore_changes = [custom_data]
+  }
 }
 
 resource "azurerm_virtual_machine_extension" "aad_ssh_login" {

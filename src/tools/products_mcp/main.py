@@ -290,13 +290,14 @@ async def rank_candidates_tool(
 
 
 def main():
-    """Run the MCP server."""
+    """Run the MCP server in SSE mode on port 8080."""
     logger.info("Starting Products MCP Server")
     logger.info(f"Cosmos DB endpoint: {settings.cosmos_db_endpoint}")
     logger.info(f"Using Managed Identity: {settings.use_managed_identity}")
+    logger.info("Starting SSE server on port 8080")
     
-    # Run the server
-    mcp.run()
+    # Always run in SSE mode for Azure Container Apps deployment
+    mcp.run(transport="http", host="0.0.0.0", port=8080)
 
 
 if __name__ == "__main__":

@@ -6,11 +6,6 @@ locals {
   search_service_name  = substr("search${local.base_compact}", 0, 60)
   project_name         = substr("project-${local.base_compact}", 0, 63)
   capability_host_name = "caphost-standard"
-  
-  # Enable jump host AI User role only if principal_id is explicitly provided (not empty string)
-  enable_jump_host_access = var.jump_host_identity_principal_id != ""
-  # Enable MCP embeddings access only if principal_id is explicitly provided (not empty string)
-  enable_mcp_access = var.mcp_identity_principal_id != ""
 
   deployments = {
     "gpt-5" = {
@@ -302,11 +297,6 @@ resource "azapi_resource" "ai_foundry_project" {
   ]
 }
 
-resource "time_sleep" "wait_project_identity" {
-  depends_on      = [azapi_resource.ai_foundry_project]
-  create_duration = "10s"
-}
-
 locals {
   project_internal_id = tostring(azapi_resource.ai_foundry_project.output["properties"]["internalId"])
   project_id_guid = join("-", [
@@ -323,8 +313,6 @@ resource "azapi_resource" "conn_cosmos" {
   name                      = azurerm_cosmosdb_account.agent.name
   parent_id                 = azapi_resource.ai_foundry_project.id
   schema_validation_enabled = false
-
-  depends_on = [time_sleep.wait_project_identity]
 
   body = {
     name = azurerm_cosmosdb_account.agent.name
@@ -347,8 +335,6 @@ resource "azapi_resource" "conn_storage" {
   parent_id                 = azapi_resource.ai_foundry_project.id
   schema_validation_enabled = false
 
-  depends_on = [time_sleep.wait_project_identity]
-
   body = {
     name = azurerm_storage_account.agent.name
     properties = {
@@ -370,8 +356,6 @@ resource "azapi_resource" "conn_search" {
   parent_id                 = azapi_resource.ai_foundry_project.id
   schema_validation_enabled = false
 
-  depends_on = [time_sleep.wait_project_identity]
-
   body = {
     name = local.search_service_name
     properties = {
@@ -392,42 +376,24 @@ resource "azurerm_role_assignment" "cosmos_operator" {
   scope                = azurerm_cosmosdb_account.agent.id
   role_definition_name = "Cosmos DB Operator"
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
-
-  depends_on = [time_sleep.wait_project_identity]
 }
 
 resource "azurerm_role_assignment" "storage_blob_contributor" {
   scope                = azurerm_storage_account.agent.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
-
-  depends_on = [time_sleep.wait_project_identity]
 }
 
 resource "azurerm_role_assignment" "search_index_data_contributor" {
   scope                = azapi_resource.search.id
   role_definition_name = "Search Index Data Contributor"
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
-
-  depends_on = [time_sleep.wait_project_identity]
 }
 
 resource "azurerm_role_assignment" "search_service_contributor" {
   scope                = azapi_resource.search.id
   role_definition_name = "Search Service Contributor"
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
-
-  depends_on = [time_sleep.wait_project_identity]
-}
-
-resource "time_sleep" "wait_rbac" {
-  depends_on = [
-    azurerm_role_assignment.cosmos_operator,
-    azurerm_role_assignment.storage_blob_contributor,
-    azurerm_role_assignment.search_index_data_contributor,
-    azurerm_role_assignment.search_service_contributor
-  ]
-  create_duration = "60s"
 }
 
 resource "azapi_resource" "capability_host" {
@@ -440,7 +406,10 @@ resource "azapi_resource" "capability_host" {
     azapi_resource.conn_cosmos,
     azapi_resource.conn_storage,
     azapi_resource.conn_search,
-    time_sleep.wait_rbac
+    azurerm_role_assignment.cosmos_operator,
+    azurerm_role_assignment.storage_blob_contributor,
+    azurerm_role_assignment.search_index_data_contributor,
+    azurerm_role_assignment.search_service_contributor
   ]
 
   body = {
@@ -459,11 +428,6 @@ resource "azapi_resource" "capability_host" {
   }
 }
 
-resource "time_sleep" "wait_capability_host" {
-  depends_on      = [azapi_resource.capability_host]
-  create_duration = "30s"
-}
-
 resource "azurerm_cosmosdb_sql_role_assignment" "thread_message_store" {
   name                = uuidv5("dns", "${local.project_name}-${local.project_id_guid}-thread-message")
   resource_group_name = var.resource_group_name
@@ -472,7 +436,7 @@ resource "azurerm_cosmosdb_sql_role_assignment" "thread_message_store" {
   role_definition_id  = "${azurerm_cosmosdb_account.agent.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
   principal_id        = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
 
-  depends_on = [time_sleep.wait_capability_host]
+  depends_on = [azapi_resource.capability_host]
 }
 
 resource "azurerm_cosmosdb_sql_role_assignment" "system_thread_store" {
@@ -502,8 +466,6 @@ resource "azurerm_role_assignment" "storage_blob_owner_restricted" {
   role_definition_name = "Storage Blob Data Owner"
   principal_id         = azapi_resource.ai_foundry_project.output["identity"]["principalId"]
 
-  depends_on = [time_sleep.wait_capability_host]
-
   condition_version = "2.0"
   condition         = <<-EOT
     (
@@ -520,34 +482,22 @@ resource "azurerm_role_assignment" "storage_blob_owner_restricted" {
 }
 
 # Grant jump host Azure AI User role to create and manage agents
-# Only created when jump_host_identity_principal_id is explicitly provided
 resource "azurerm_role_assignment" "jump_host_ai_user" {
-  count                = local.enable_jump_host_access ? 1 : 0
   scope                = azapi_resource.ai_foundry.id
   role_definition_name = "Azure AI User"
   principal_id         = var.jump_host_identity_principal_id
-
-  depends_on = [azapi_resource.ai_foundry_project]
 }
 
 # Grant jump host Cognitive Services OpenAI User role for embeddings access
-# Only created when jump_host_identity_principal_id is explicitly provided
 resource "azurerm_role_assignment" "jump_host_openai_user" {
-  count                = local.enable_jump_host_access ? 1 : 0
   scope                = azapi_resource.ai_foundry.id
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = var.jump_host_identity_principal_id
-
-  depends_on = [azapi_resource.ai_foundry_project]
 }
 
 # Grant MCP server identity Cognitive Services OpenAI User role for embeddings access
-# Only created when mcp_identity_principal_id is explicitly provided
 resource "azurerm_role_assignment" "mcp_openai_user" {
-  count                = local.enable_mcp_access ? 1 : 0
   scope                = azapi_resource.ai_foundry.id
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = var.mcp_identity_principal_id
-
-  depends_on = [azapi_resource.ai_foundry_project]
 }

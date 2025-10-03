@@ -2,7 +2,7 @@
 
 resource "azurerm_container_app" "frontend" {
   name                         = "aca-frontend-${var.base_name}"
-  container_app_environment_id = azurerm_container_app_environment.main.id
+  container_app_environment_id = azapi_resource.environment.id
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
   tags                         = var.tags

@@ -34,23 +34,43 @@ resource "azurerm_user_assigned_identity" "mcp" {
   tags                = var.tags
 }
 
-resource "azurerm_container_app_environment" "main" {
-  name                           = "cae-${var.base_name}"
-  location                       = var.location
-  resource_group_name            = var.resource_group_name
-  infrastructure_subnet_id       = var.subnet_ids["snet-aca"]
-  internal_load_balancer_enabled = true
-  log_analytics_workspace_id     = azurerm_log_analytics_workspace.main.id
-  tags                           = var.tags
+data "azurerm_resource_group" "main" {
+  name = var.resource_group_name
+}
 
-  workload_profile {
-    name                  = "Consumption"
-    workload_profile_type = "Consumption"
+resource "azapi_resource" "environment" {
+  type      = "Microsoft.App/managedEnvironments@2025-02-02-preview"
+  name      = "cae-${var.base_name}"
+  location  = var.location
+  parent_id = data.azurerm_resource_group.main.id
+  tags      = var.tags
+
+  body = {
+    properties = {
+      appLogsConfiguration = {
+        destination = "log-analytics"
+        logAnalyticsConfiguration = {
+          customerId = azurerm_log_analytics_workspace.main.workspace_id
+          sharedKey  = azurerm_log_analytics_workspace.main.primary_shared_key
+        }
+      }
+      vnetConfiguration = {
+        infrastructureSubnetId = var.subnet_ids["snet-aca"]
+        internal               = true
+      }
+      publicNetworkAccess = "Disabled"
+      workloadProfiles = [
+        {
+          name                = "Consumption"
+          workloadProfileType = "Consumption"
+        }
+      ]
+    }
   }
 
   lifecycle {
     ignore_changes = [
-      infrastructure_resource_group_name
+      body.properties.infrastructureResourceGroup
     ]
   }
 }

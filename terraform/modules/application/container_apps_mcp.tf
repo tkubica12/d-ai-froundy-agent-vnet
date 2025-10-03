@@ -3,7 +3,7 @@
 
 resource "azurerm_container_app" "mcp" {
   name                         = "aca-mcp-${var.base_name}"
-  container_app_environment_id = azurerm_container_app_environment.main.id
+  container_app_environment_id = azapi_resource.environment.id
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
   tags                         = var.tags
@@ -26,18 +26,13 @@ resource "azurerm_container_app" "mcp" {
       }
 
       env {
-        name  = "AZURE_COSMOS_ENDPOINT"
+        name  = "COSMOS_DB_ENDPOINT"
         value = azurerm_cosmosdb_account.main.endpoint
       }
 
       env {
-        name  = "AZURE_COSMOS_DATABASE"
+        name  = "COSMOS_DB_NAME"
         value = azurerm_cosmosdb_sql_database.main.name
-      }
-
-      env {
-        name  = "AZURE_COSMOS_CONTAINER"
-        value = azurerm_cosmosdb_sql_container.products.name
       }
 
       env {
@@ -91,7 +86,7 @@ resource "azurerm_private_endpoint" "mcp" {
   private_service_connection {
     name                           = "psc-mcp-${var.base_name}"
     is_manual_connection           = false
-    private_connection_resource_id = azurerm_container_app_environment.main.id
+    private_connection_resource_id = azapi_resource.environment.id
     subresource_names              = ["managedEnvironments"]
   }
 
