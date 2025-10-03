@@ -45,11 +45,11 @@ runcmd:
   
   # Install uv (Python package manager)
   - curl -LsSf https://astral.sh/uv/install.sh | sh
-  - echo 'export PATH="/root/.local/bin:$PATH"' >> /etc/profile.d/uv.sh
-  - echo 'eval "$(uv generate-shell-completion bash)"' >> /etc/profile.d/uv.sh
   
-  # Make uv available system-wide
-  - ln -sf /root/.local/bin/uv /usr/local/bin/uv
+  # Make uv available system-wide by copying to /usr/local/bin
+  - cp /root/.local/bin/uv /usr/local/bin/uv
+  - cp /root/.local/bin/uvx /usr/local/bin/uvx
+  - chmod 755 /usr/local/bin/uv /usr/local/bin/uvx
   
   # Configure git for root user
   - git config --global user.email "tkubica12@gmail.com"
