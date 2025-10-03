@@ -9,6 +9,8 @@ locals {
   
   # Enable jump host AI User role only if principal_id is explicitly provided (not empty string)
   enable_jump_host_access = var.jump_host_identity_principal_id != ""
+  # Enable MCP embeddings access only if principal_id is explicitly provided (not empty string)
+  enable_mcp_access = var.mcp_identity_principal_id != ""
 
   deployments = {
     "gpt-5" = {
@@ -535,6 +537,17 @@ resource "azurerm_role_assignment" "jump_host_openai_user" {
   scope                = azapi_resource.ai_foundry.id
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = var.jump_host_identity_principal_id
+
+  depends_on = [azapi_resource.ai_foundry_project]
+}
+
+# Grant MCP server identity Cognitive Services OpenAI User role for embeddings access
+# Only created when mcp_identity_principal_id is explicitly provided
+resource "azurerm_role_assignment" "mcp_openai_user" {
+  count                = local.enable_mcp_access ? 1 : 0
+  scope                = azapi_resource.ai_foundry.id
+  role_definition_name = "Cognitive Services OpenAI User"
+  principal_id         = var.mcp_identity_principal_id
 
   depends_on = [azapi_resource.ai_foundry_project]
 }

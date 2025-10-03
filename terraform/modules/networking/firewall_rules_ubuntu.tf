@@ -29,7 +29,10 @@ resource "azurerm_firewall_policy_rule_collection_group" "ubuntu_essential" {
         "changelogs.ubuntu.com",
         "*.canonical.com",
         "keyserver.ubuntu.com",
-        "api.snapcraft.io",
+        "*.snapcraft.io",
+        "*.cdn.snapcraft.io",
+        "*.snapcraftcontent.com",
+        "*.cdn.snapcraftcontent.com",
         "*.launchpad.net"
       ]
     }

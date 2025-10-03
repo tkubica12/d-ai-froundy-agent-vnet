@@ -29,6 +29,15 @@ resource "azurerm_cosmosdb_sql_role_assignment" "backend" {
   scope               = azurerm_cosmosdb_account.main.id
 }
 
+# Grant MCP server identity access to Cosmos DB
+resource "azurerm_cosmosdb_sql_role_assignment" "mcp" {
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.main.name
+  role_definition_id  = azurerm_cosmosdb_sql_role_definition.data_contributor.id
+  principal_id        = azurerm_user_assigned_identity.mcp.principal_id
+  scope               = azurerm_cosmosdb_account.main.id
+}
+
 # Grant jump VM system-assigned identity access to Cosmos DB for testing
 # Only created when jump_vm_principal_id is explicitly provided
 resource "azurerm_cosmosdb_sql_role_assignment" "jump_vm" {

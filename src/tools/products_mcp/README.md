@@ -188,8 +188,38 @@ See `ranking.py` for implementation details.
 ### Running Tests
 
 ```bash
+# Run all tests (includes unit and integration tests)
 uv run pytest
+
+# Run only local tests (excludes deployment tests)
+uv run pytest test_client.py test_models.py
 ```
+
+### Deployment Testing
+
+Test the deployed MCP server in Azure Container Apps:
+
+```bash
+# Set the MCP endpoint (from Terraform outputs or Azure portal)
+export MCP_ENDPOINT=https://aca-mcp-xyz.internal.region.azurecontainerapps.io
+
+# Run deployment test
+uv run python test_deployment.py
+
+# Or with pytest
+uv run pytest test_deployment.py -v -s
+```
+
+**Note:** Deployment tests require:
+- Network connectivity to the MCP server (run from jump VM or connected VPN)
+- `MCP_ENDPOINT` environment variable set to the Container App FQDN
+- MCP server must be running and healthy
+
+The deployment test validates:
+- Server health and responsiveness
+- All tools are registered and accessible
+- Tool execution with mock data
+- Error handling and response formats
 
 ### Code Structure
 

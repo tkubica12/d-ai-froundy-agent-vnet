@@ -41,6 +41,7 @@ module "application" {
   backend_image        = var.backend_image
   frontend_image       = var.frontend_image
   jump_vm_principal_id = module.jump.jump_host_identity_principal_id
+  embeddings_endpoint  = module.foundry.cognitive_account_endpoint
 }
 
 module "foundry" {
@@ -55,18 +56,19 @@ module "foundry" {
   private_endpoint_subnet_id      = module.networking.subnet_ids["snet-pes"]
   private_dns_zone_ids            = module.networking.private_dns_zone_ids
   jump_host_identity_principal_id = module.jump.jump_host_identity_principal_id
+  mcp_identity_principal_id       = module.application.mcp_managed_identity_principal_id
 }
 
 module "jump" {
   source = "./modules/jump"
 
-  resource_group_name    = azurerm_resource_group.main.name
-  location               = var.location
-  base_name              = local.base_name
-  tags                   = var.tags
-  bastion_subnet_id      = module.networking.subnet_ids["snet-bastion"]
-  jump_subnet_id         = module.networking.subnet_ids["snet-jumphost"]
-  admin_username         = var.jump_host_admin_username
-  admin_password         = var.jump_host_admin_password
-  admin_ssh_public_key   = var.jump_host_admin_ssh_key
+  resource_group_name  = azurerm_resource_group.main.name
+  location             = var.location
+  base_name            = local.base_name
+  tags                 = var.tags
+  bastion_subnet_id    = module.networking.subnet_ids["snet-bastion"]
+  jump_subnet_id       = module.networking.subnet_ids["snet-jumphost"]
+  admin_username       = var.jump_host_admin_username
+  admin_password       = var.jump_host_admin_password
+  admin_ssh_public_key = var.jump_host_admin_ssh_key
 }

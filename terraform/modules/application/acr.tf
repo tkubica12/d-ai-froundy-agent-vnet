@@ -39,6 +39,12 @@ resource "azurerm_role_assignment" "frontend_acr_pull" {
   principal_id         = azurerm_user_assigned_identity.frontend.principal_id
 }
 
+resource "azurerm_role_assignment" "mcp_acr_pull" {
+  scope                = azurerm_container_registry.main.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_user_assigned_identity.mcp.principal_id
+}
+
 resource "azapi_resource_action" "import_backend_image" {
   type        = "Microsoft.ContainerRegistry/registries@2023-01-01-preview"
   resource_id = azurerm_container_registry.main.id

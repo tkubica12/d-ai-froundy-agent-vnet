@@ -45,6 +45,15 @@ variable "frontend_image" {
   default     = null
 }
 
+variable "mcp_image" {
+  type        = string
+  description = <<-DESC
+    Container image for the Products MCP server.
+    If not provided, defaults to products-mcp:latest in the provisioned ACR.
+  DESC
+  default     = null
+}
+
 variable "jump_vm_principal_id" {
   type        = string
   description = <<-DESC
@@ -53,5 +62,13 @@ variable "jump_vm_principal_id" {
     Optional - if not provided (empty string), jump VM will not have data plane access.
   DESC
   default     = ""
+}
+
+variable "embeddings_endpoint" {
+  type        = string
+  description = <<-DESC
+    Azure OpenAI endpoint for embeddings model.
+    Should be the base endpoint from Azure AI Foundry (e.g., https://xyz.cognitiveservices.azure.com).
+  DESC
 }
 

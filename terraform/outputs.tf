@@ -23,6 +23,11 @@ output "frontend_container_app_fqdn" {
   description = "Internal FQDN of the frontend container app."
 }
 
+output "mcp_container_app_fqdn" {
+  value       = module.application.mcp_container_app_fqdn
+  description = "Internal FQDN of the MCP server container app."
+}
+
 output "cognitive_account_id" {
   value       = module.foundry.cognitive_account_id
   description = "Azure AI Foundry account resource ID."
@@ -74,7 +79,15 @@ output "jump_host_setup_instructions" {
     
     4. In VS Code: Ctrl+Shift+P > "Remote-SSH: Connect to Host..." > azure-jump
     
+    === Test MCP Server Deployment ===
+    
+    From the jump host, test the deployed MCP server:
+    
+       export MCP_ENDPOINT=${module.application.mcp_container_app_fqdn}
+       cd /path/to/repo/src/tools/products_mcp
+       uv run python test_deployment.py
+    
     See terraform/modules/jump/README.md for detailed setup instructions.
   EOT
-  description = "Quick setup guide for accessing the jump host via VS Code Remote SSH."
+  description = "Quick setup guide for accessing the jump host and testing the MCP server."
 }

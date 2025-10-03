@@ -44,3 +44,13 @@ variable "jump_host_identity_principal_id" {
   default     = ""
 }
 
+variable "mcp_identity_principal_id" {
+  type        = string
+  description = <<-DESC
+    Principal ID of the MCP server user-assigned managed identity.
+    Used to grant Cognitive Services OpenAI User role for embeddings access.
+    Leave empty to skip.
+  DESC
+  default     = ""
+}
+

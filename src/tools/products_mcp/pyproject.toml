@@ -25,3 +25,14 @@ dev = [
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["test_client.py", "test_models.py"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+# Exclude deployment tests from default pytest run
+# Run deployment tests explicitly with: pytest test_deployment.py
+addopts = "--ignore=test_deployment.py"
