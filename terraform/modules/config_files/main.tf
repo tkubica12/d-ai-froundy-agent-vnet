@@ -35,6 +35,7 @@ resource "local_file" "facilitator_env" {
   content = templatefile("${path.module}/templates/agent.env.tftpl", {
     project_endpoint      = var.foundry_project_endpoint
     model_deployment_name = var.model_deployment_name
+    mcp_server_url        = var.mcp_server_url
   })
   file_permission = "0644"
 }
@@ -45,6 +46,7 @@ resource "local_file" "product_finder_env" {
   content = templatefile("${path.module}/templates/agent.env.tftpl", {
     project_endpoint      = var.foundry_project_endpoint
     model_deployment_name = var.model_deployment_name
+    mcp_server_url        = var.mcp_server_url
   })
   file_permission = "0644"
 }

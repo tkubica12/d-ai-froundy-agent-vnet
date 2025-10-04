@@ -61,6 +61,15 @@ variable "model_deployment_name" {
   EOT
 }
 
+variable "mcp_server_url" {
+  type        = string
+  description = <<-EOT
+    URL of the MCP (Model Context Protocol) server for product catalog tools.
+    This is the Container Apps endpoint where the products MCP server is deployed.
+    Format: https://<app-name>.<region>.azurecontainerapps.io/mcp
+  EOT
+}
+
 variable "resource_group_name" {
   type        = string
   description = "Name of the Azure resource group containing the infrastructure."
